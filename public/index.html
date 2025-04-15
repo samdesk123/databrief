@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woolworths Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="assets/images/ham_new.webp" alt="Menu" class="hamburger" onclick="toggleSidebar()">
+            <a href="index.html">
+                <img src="assets/images/woolworths_group_100_years_logo_without_tag.svg" alt="Woolworths Group" class="group-logo">
+            </a>
+        </div>
+        <div class="user-info">
+            <span class="user-name">John Doe</span>
+            <img src="assets/images/photo.jpg.jfif" alt="User Avatar" class="user-avatar">
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <i class="fas fa-times sidebar-close" onclick="toggleSidebar()"></i>
+        <ul class="sidebar-menu">
+            <li onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Home</li>
+            <li onclick="window.location.href='databrief.html'"><i class="fas fa-table"></i> Data Brief</li>
+            <li><i class="fas fa-user"></i> Profile</li>
+            <li><i class="fas fa-shopping-cart"></i> My Orders</li>
+            <li><i class="fas fa-heart"></i> Favorites</li>
+            <li><i class="fas fa-cog"></i> Settings</li>
+            <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="tiles-container">
+            <div class="tile" data-store="supermarket" onclick="selectTile(this, 'supermarket')">
+                <img src="assets/images/woolworths_super.png" alt="Supermarket">
+                <h2>Supermarket</h2>
+            </div>
+            <div class="tile" data-store="bigw" onclick="selectTile(this, 'bigw')">
+                <img src="assets/images/bigw-logo.svg" alt="BIG W">
+                <h2>BIG W</h2>
+            </div>
+            <div class="tile" data-store="bws" onclick="selectTile(this, 'bws')">
+                <img src="assets/images/bws-logo.webp" alt="BWS">
+                <h2>BWS</h2>
+            </div>
+            <div class="tile" data-store="everyday" onclick="selectTile(this, 'everyday')">
+                <img src="assets/images/Market.webp" alt="Everyday Market">
+                <h2>Everyday Market</h2>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>

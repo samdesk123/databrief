@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Brief - Form Submissions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/databrief.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="assets/images/ham_new.webp" alt="Menu" class="hamburger" onclick="toggleSidebar()">
+            <a href="index.html">
+                <img src="assets/images/woolworths_group_100_years_logo_without_tag.svg" alt="Woolworths Group" class="group-logo">
+            </a>
+        </div>
+        <div class="user-info">
+            <span class="user-name">John Doe</span>
+            <img src="assets/images/photo.jpg.jfif" alt="User Avatar" class="user-avatar">
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <i class="fas fa-times sidebar-close" onclick="toggleSidebar()"></i>
+        <ul class="sidebar-menu">
+            <li onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Home</li>
+            <li onclick="window.location.href='databrief.html'"><i class="fas fa-table"></i> Data Brief</li>
+            <li><i class="fas fa-user"></i> Profile</li>
+            <li><i class="fas fa-shopping-cart"></i> My Orders</li>
+            <li><i class="fas fa-heart"></i> Favorites</li>
+            <li><i class="fas fa-cog"></i> Settings</li>
+            <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <h1>Form Submissions Data</h1>
+        <button class="refresh-button" onclick="loadSubmissions()">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+        <div class="data-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Store</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                        <th>Submitted At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="submissionsTable">
+                    <tr>
+                        <td colspan="7" class="loading">Loading submissions...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Modal for editing -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2>Edit Submission</h2>
+            <form id="editForm" class="modal-form">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editStore">Store:</label>
+                    <input type="text" id="editStore" required>
+                    <div class="error-message" id="storeError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="editName">Name:</label>
+                    <input type="text" id="editName" required>
+                    <div class="error-message" id="nameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" required>
+                    <div class="error-message" id="emailError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="editMessage">Message:</label>
+                    <textarea id="editMessage" required></textarea>
+                    <div class="error-message" id="messageError"></div>
+                </div>
+                <div id="formError" class="error-message"></div>
+                <div id="formSuccess" class="success-message"></div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add delete confirmation modal -->
+    <div id="deleteModal" class="delete-modal">
+        <div class="delete-modal-content">
+            <h2 class="delete-modal-title">Confirm Delete</h2>
+            <p>Are you sure you want to delete this submission?</p>
+            <p>This action cannot be undone.</p>
+            <div class="delete-modal-buttons">
+                <button class="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+                <button class="cancel-delete-btn" onclick="closeDeleteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function formatDate(dateString) {
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        // Modal functions
+        function openModal(submission) {
+            document.getElementById('editId').value = submission.id;
+            document.getElementById('editStore').value = submission.store;
+            document.getElementById('editName').value = submission.name;
+            document.getElementById('editEmail').value = submission.email;
+            document.getElementById('editMessage').value = submission.message;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // Clear form inputs
+        function clearForm() {
+            document.getElementById('editId').value = '';
+            document.getElementById('editStore').value = '';
+            document.getElementById('editName').value = '';
+            document.getElementById('editEmail').value = '';
+            document.getElementById('editMessage').value = '';
+            clearErrors();
+        }
+
+        // Clear error messages
+        function clearErrors() {
+            document.getElementById('storeError').textContent = '';
+            document.getElementById('nameError').textContent = '';
+            document.getElementById('emailError').textContent = '';
+            document.getElementById('messageError').textContent = '';
+            document.getElementById('formError').textContent = '';
+            document.getElementById('formSuccess').textContent = '';
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            clearForm(); // Clear form when closing modal
+        }
+
+        // Handle edit form submission
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+            
+            const formData = {
+                id: document.getElementById('editId').value,
+                store: document.getElementById('editStore').value.trim(),
+                name: document.getElementById('editName').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
+                message: document.getElementById('editMessage').value.trim()
+            };
+
+            // Validate inputs
+            let hasError = false;
+            if (!formData.store) {
+                document.getElementById('storeError').textContent = 'Store is required';
+                hasError = true;
+            }
+            if (!formData.name) {
+                document.getElementById('nameError').textContent = 'Name is required';
+                hasError = true;
+            }
+            if (!formData.email) {
+                document.getElementById('emailError').textContent = 'Email is required';
+                hasError = true;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                document.getElementById('emailError').textContent = 'Please enter a valid email address';
+                hasError = true;
+            }
+            if (!formData.message) {
+                document.getElementById('messageError').textContent = 'Message is required';
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            try {
+                const response = await fetch(`http://localhost:4000/api/submissions/${formData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('formSuccess').textContent = 'Submission updated successfully';
+                    setTimeout(() => {
+                        closeModal(); // This will also clear the form
+                        loadSubmissions(); // Refresh the table
+                    }, 1000);
+                } else {
+                    document.getElementById('formError').textContent = result.message || 'Error updating submission';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('formError').textContent = 'Network error. Please try again.';
+            }
+        });
+
+        let submissionToDelete = null;
+
+        function showDeleteModal(submission) {
+            submissionToDelete = submission;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            submissionToDelete = null;
+        }
+
+        async function confirmDelete() {
+            if (!submissionToDelete) {
+                console.error('No submission selected for deletion');
+                alert('Error: No submission selected for deletion');
+                return;
+            }
+
+            try {
+                console.log('Attempting to delete submission:', submissionToDelete.id);
+                const response = await fetch(`http://localhost:4000/api/submissions/${submissionToDelete.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server responded with error:', response.status, errorText);
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Delete response:', result);
+
+                if (result.success) {
+                    console.log('Successfully deleted submission');
+                    closeDeleteModal();
+                    loadSubmissions(); // Refresh the table
+                } else {
+                    console.error('Delete failed:', result.message);
+                    alert('Error deleting submission: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error during deletion:', error);
+                alert('Error deleting submission: ' + (error.message || 'Network error. Please try again.'));
+            } finally {
+                submissionToDelete = null;
+            }
+        }
+
+        // Update the loadSubmissions function to include delete button
+        async function loadSubmissions() {
+            const tableBody = document.getElementById('submissionsTable');
+            tableBody.innerHTML = '<tr><td colspan="7" class="loading">Loading submissions...</td></tr>';
+
+            try {
+                console.log('Fetching submissions...');
+                const response = await fetch('http://localhost:4000/api/submissions');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received data:', data);
+
+                if (data.success && data.submissions && data.submissions.length > 0) {
+                    tableBody.innerHTML = data.submissions.map(submission => {
+                        // Safely escape HTML to prevent XSS
+                        const safeSubmission = {
+                            id: submission.id,
+                            store: escapeHtml(submission.store),
+                            name: escapeHtml(submission.name),
+                            email: escapeHtml(submission.email),
+                            message: escapeHtml(submission.message),
+                            created_at: submission.created_at
+                        };
+                        
+                        return `
+                            <tr>
+                                <td>${safeSubmission.id}</td>
+                                <td>${safeSubmission.store}</td>
+                                <td>${safeSubmission.name}</td>
+                                <td>${safeSubmission.email}</td>
+                                <td>${safeSubmission.message}</td>
+                                <td>${formatDate(safeSubmission.created_at)}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="edit-btn" onclick='openModal(${JSON.stringify(safeSubmission)})'>
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="delete-btn" onclick='showDeleteModal(${JSON.stringify(safeSubmission)})'>
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    console.log('No submissions found or empty data');
+                    tableBody.innerHTML = '<tr><td colspan="7" class="no-data">No submissions found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                tableBody.innerHTML = `<tr><td colspan="7" class="no-data">Error loading submissions: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Helper function to escape HTML and prevent XSS
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('editModal')) {
+                closeModal();
+            }
+            const deleteModal = document.getElementById('deleteModal');
+            if (event.target == deleteModal) {
+                closeDeleteModal();
+            }
+        }
+
+        // Load submissions when page loads
+        document.addEventListener('DOMContentLoaded', loadSubmissions);
+    </script>
+</body>
+</html> 

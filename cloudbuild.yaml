@@ -1,0 +1,30 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/databrif-app', '.']
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/databrif-app']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'databrif-app'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/databrif-app'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'DB_HOST=${_DB_HOST},DB_USER=${_DB_USER},DB_NAME=${_DB_NAME},DB_PORT=${_DB_PORT}'
+      - '--set-secrets'
+      - 'DB_PASS=DB_PASSWORD:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/databrif-app' 

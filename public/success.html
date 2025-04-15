@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Submission</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .hamburger {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .hamburger:hover {
+            background-color: #f0f0f0;
+            opacity: 0.8;
+        }
+        .group-logo {
+            height: 45px;
+            width: auto;
+        }
+        .header-left a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .header-left a:hover .group-logo {
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-name {
+            color: #333;
+            font-weight: 500;
+        }
+        .sidebar {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100%;
+            background-color: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            z-index: 1001;
+            padding-top: 60px;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .sidebar-menu li:hover {
+            background-color: #f5f5f5;
+        }
+        .main-content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .review-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .review-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .review-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .review-header p {
+            color: #666;
+            margin: 0;
+        }
+        .review-details {
+            margin-bottom: 30px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .detail-label {
+            width: 120px;
+            font-weight: bold;
+            color: #333;
+        }
+        .detail-value {
+            flex: 1;
+            color: #666;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .approve-btn, .edit-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+        .approve-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .approve-btn:hover {
+            background-color: #45a049;
+        }
+        .edit-btn {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .edit-btn:hover {
+            background-color: #e0e0e0;
+        }
+        .store-logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="assets/images/ham_new.webp" alt="Menu" class="hamburger" onclick="toggleSidebar()">
+            <a href="index.html">
+                <img src="assets/images/woolworths_group_100_years_logo_without_tag.svg" alt="Woolworths Group" class="group-logo">
+            </a>
+        </div>
+        <div class="user-info">
+            <span class="user-name">John Doe</span>
+            <img src="assets/images/photo.jpg.jfif" alt="User Avatar" class="user-avatar">
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <i class="fas fa-times sidebar-close" onclick="toggleSidebar()"></i>
+        <ul class="sidebar-menu">
+            <li onclick="window.location.href='index.html'"><i class="fas fa-home"></i> Home</li>
+            <li onclick="window.location.href='databrief.html'"><i class="fas fa-table"></i> Data Brief</li>
+            <li><i class="fas fa-user"></i> Profile</li>
+            <li><i class="fas fa-shopping-cart"></i> My Orders</li>
+            <li><i class="fas fa-heart"></i> Favorites</li>
+            <li><i class="fas fa-cog"></i> Settings</li>
+            <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="review-card">
+            <div class="review-header">
+                <img id="storeLogo" class="store-logo" src="" alt="Store Logo">
+                <h1>Review Your Submission</h1>
+                <p>Please review your submission details before final approval</p>
+            </div>
+            <div class="review-details">
+                <div class="detail-row">
+                    <div class="detail-label">Store:</div>
+                    <div class="detail-value" id="storeValue"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-value" id="nameValue"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value" id="emailValue"></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Message:</div>
+                    <div class="detail-value" id="messageValue"></div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="approve-btn" onclick="approveSubmission()">
+                    <i class="fas fa-check"></i> Approve & Submit
+                </button>
+                <button class="edit-btn" onclick="editSubmission()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // Load and display submission data
+        window.addEventListener('load', () => {
+            const pendingData = JSON.parse(localStorage.getItem('pendingSubmission'));
+            if (!pendingData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const storeNames = {
+                'supermarket': 'Woolworths Supermarket',
+                'bigw': 'BIG W',
+                'bws': 'BWS',
+                'everyday': 'Everyday Market'
+            };
+
+            const storeLogos = {
+                'supermarket': 'assets/images/woolworths_super.png',
+                'bigw': 'assets/images/bigw-logo.svg',
+                'bws': 'assets/images/bws-logo.webp',
+                'everyday': 'assets/images/Market.webp'
+            };
+
+            document.getElementById('storeLogo').src = storeLogos[pendingData.store] || '';
+            document.getElementById('storeValue').textContent = storeNames[pendingData.store] || pendingData.store;
+            document.getElementById('nameValue').textContent = pendingData.name;
+            document.getElementById('emailValue').textContent = pendingData.email;
+            document.getElementById('messageValue').textContent = pendingData.message;
+        });
+
+        async function approveSubmission() {
+            try {
+                const pendingData = JSON.parse(localStorage.getItem('pendingSubmission'));
+                
+                const response = await fetch('http://localhost:4000/api/submit-form', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(pendingData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Clear all stored form data
+                    localStorage.removeItem('pendingSubmission');
+                    localStorage.removeItem('name');
+                    localStorage.removeItem('email');
+                    localStorage.removeItem('message');
+                    
+                    alert('Form submitted successfully!');
+                    window.location.href = 'databrief.html';
+                } else {
+                    alert('Error submitting form: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting form. Please try again.');
+            }
+        }
+
+        function editSubmission() {
+            window.location.href = 'intermediate.html';
+        }
+    </script>
+</body>
+</html> 
