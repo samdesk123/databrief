@@ -30,36 +30,52 @@ app.get('*', (req, res, next) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Create connection pool with SSL configuration for Cloud SQL
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT) || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    ssl: process.env.NODE_ENV === 'production' ? {
-        rejectUnauthorized: true,
-        // You might need to add CA certificate here for production
-        // ca: fs.readFileSync('/path/to/server-ca.pem'),
-    } : {
-        rejectUnauthorized: false
+// Create connection configuration based on environment
+const getConnectionConfig = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // Cloud Run with Cloud SQL Auth Proxy configuration
+        return {
+            socketPath: `/cloudsql/${process.env.DB_HOST}`,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            enableKeepAlive: true,
+            keepAliveInitialDelay: 0
+        };
+    } else {
+        // Local development configuration
+        return {
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            port: parseInt(process.env.DB_PORT) || 3306,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        };
     }
-});
+};
 
-// Test the connection and log more details
+// Create connection pool
+const pool = mysql.createPool(getConnectionConfig());
+
+// Test the connection and log details
 pool.getConnection((err, connection) => {
     if (err) {
         console.error('Error connecting to the database:', err);
         console.error('Connection details:', {
-            host: process.env.DB_HOST,
+            host: process.env.NODE_ENV === 'production' ? 'Using Cloud SQL Auth Proxy' : process.env.DB_HOST,
             user: process.env.DB_USER,
             database: process.env.DB_NAME,
-            port: process.env.DB_PORT
+            socketPath: process.env.NODE_ENV === 'production' ? `/cloudsql/${process.env.DB_HOST}` : 'Not using socket'
         });
-        // Don't exit the process, let it retry
         return;
     }
     console.log('Successfully connected to database');
