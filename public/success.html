@@ -281,7 +281,7 @@
             try {
                 const pendingData = JSON.parse(localStorage.getItem('pendingSubmission'));
                 
-                const response = await fetch('http://localhost:4000/api/submit-form', {
+                const response = await fetch('https://databrief-141102685385.us-central1.run.app/api/submit-form', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
