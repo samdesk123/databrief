@@ -131,8 +131,8 @@ app.get('/api/roles', async (_req, res) => {
         const [rows] = await pool.promise().execute('SELECT * FROM role ORDER BY role_name ASC');
         res.json({ success: true, roles: rows });
     } catch (err) {
-        console.error("Roles fetch error:", err);   
-        res.status(500).json({ success: false, message: 'Database error' });
+        console.error('Error loading roles:', err);
+        res.status(500).json({ success: false, message: 'Failed to load roles' });
     }
 });
 
