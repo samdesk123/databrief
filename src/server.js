@@ -76,7 +76,7 @@ app.post('/api/submit-form', async (req, res) => {
     }
 });
 
-// Get all submissions
+// Get all submissions test
 app.get('/api/submissions', async (_req, res) => {
     try {
         const [rows] = await pool.promise().execute('SELECT * FROM form_submissions ORDER BY id ASC');
@@ -131,7 +131,7 @@ app.get('/api/roles', async (_req, res) => {
         const [rows] = await pool.promise().execute('SELECT * FROM role ORDER BY role_name ASC');
         res.json({ success: true, roles: rows });
     } catch (err) {
-        console.error("Roles fetch error:", err);
+        console.error("Roles fetch error:", err);   
         res.status(500).json({ success: false, message: 'Database error' });
     }
 });
