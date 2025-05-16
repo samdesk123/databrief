@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -24,38 +25,37 @@ app.get('*', (req, res, next) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Database config
+// Database config (adjust DB_HOST or INSTANCE_UNIX_SOCKET as needed)
 const dbConfig = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  socketPath: process.env.INSTANCE_UNIX_SOCKET
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST || 'localhost', // TCP connection (preferred)
+    port: process.env.DB_PORT || 3306,
+    // If using Unix Socket instead of TCP, uncomment below:
+    // socketPath: process.env.INSTANCE_UNIX_SOCKET
 };
 
-const connection = mysql.createConnection(dbConfig);
-
-connection.connect(err => {
-  if (err) {
-    console.error('Database connection failed:', err.stack);
-    return;
-  }
-  console.log('Connected to Cloud SQL MySQL database.');
-});
-
-const pool = mysql.createPool(getConnectionConfig());
+const pool = mysql.createPool(dbConfig);
 
 // Create table if not exists
 (async () => {
-    await pool.promise().execute(`
-        CREATE TABLE IF NOT EXISTS form_submissions (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            store VARCHAR(50) NOT NULL,
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
+    try {
+        await pool.promise().execute(`
+            CREATE TABLE IF NOT EXISTS form_submissions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                store VARCHAR(50) NOT NULL,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✅ Table initialized');
+    } catch (err) {
+        console.error('❌ Error initializing DB:', err);
+        process.exit(1); // Exit if DB init fails
+    }
 })();
 
 // Health check
@@ -116,7 +116,7 @@ app.get('/api/roles', async (_req, res) => {
     res.json({ success: true, roles: rows });
 });
 
+// Start server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`🚀 Server is running on port ${port}`);
 });
-// Helper function to get connection config 
