@@ -6,25 +6,28 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Middleware
+// CORS setup
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+    origin: '*', // You can change this to specific domain in production
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
+    credentials: false
 }));
-app.use(express.static(path.join(__dirname, '../public')));
+
+// Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Serve SPA
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
+
 app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) return next();
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Database config using Unix Socket for Cloud Run
+// Database connection (Unix socket for Cloud Run)
 const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
@@ -34,13 +37,11 @@ const dbConfig = {
 
 const pool = mysql.createPool(dbConfig);
 
-// Create tables and seed data if necessary
+// Ensure required tables exist
 (async () => {
     try {
-        const db = pool.promise();
-
         // Create form_submissions table
-        await db.execute(`
+        await pool.promise().execute(`
             CREATE TABLE IF NOT EXISTS form_submissions (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 store VARCHAR(50) NOT NULL,
@@ -50,33 +51,27 @@ const pool = mysql.createPool(dbConfig);
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("✅ Table 'form_submissions' ensured.");
 
-        // Create role table
-        await db.execute(`
+        // Create roles table
+        await pool.promise().execute(`
             CREATE TABLE IF NOT EXISTS role (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                role_name VARCHAR(50) NOT NULL UNIQUE
+                role_name VARCHAR(100) UNIQUE NOT NULL
             )
         `);
-        console.log("✅ Table 'role' ensured.");
 
-        // Seed default roles if table is empty
-        const [existingRoles] = await db.query(`SELECT COUNT(*) as count FROM role`);
-        if (existingRoles[0].count === 0) {
-            await db.query(`
-                INSERT INTO role (role_name)
-                VALUES ('manage'), ('CA'), ('BA')
+        // Insert roles if empty
+        const [rows] = await pool.promise().query('SELECT COUNT(*) as count FROM role');
+        if (rows[0].count === 0) {
+            await pool.promise().query(`
+                INSERT INTO role (role_name) VALUES ('Manager'), ('CA'), ('BA')
             `);
-            console.log("✅ Default roles seeded.");
+            console.log("Inserted default roles.");
         }
 
-        // Optional: List tables for debugging
-        const [tables] = await db.query('SHOW TABLES');
-        console.log("📋 Tables in database:", tables.map(t => Object.values(t)[0]));
-
+        console.log("Tables ensured.");
     } catch (error) {
-        console.error("❌ Error initializing database:", error);
+        console.error("Error setting up database:", error);
     }
 })();
 
@@ -85,7 +80,7 @@ app.get('/_health', (req, res) => {
     res.status(200).json({ status: 'healthy' });
 });
 
-// Submit form
+// API: Submit form
 app.post('/api/submit-form', async (req, res) => {
     const { store, name, email, message } = req.body;
     if (!store || !name || !email || !message) {
@@ -103,7 +98,7 @@ app.post('/api/submit-form', async (req, res) => {
     }
 });
 
-// Get all submissions
+// API: Get all submissions
 app.get('/api/submissions', async (_req, res) => {
     try {
         const [rows] = await pool.promise().execute('SELECT * FROM form_submissions ORDER BY id ASC');
@@ -114,13 +109,15 @@ app.get('/api/submissions', async (_req, res) => {
     }
 });
 
-// Update submission
+// API: Update submission
 app.put('/api/submissions/:id', async (req, res) => {
     const { id } = req.params;
     const { store, name, email, message } = req.body;
+
     if (!store || !name || !email || !message) {
         return res.status(400).json({ success: false, message: 'All fields are required' });
     }
+
     try {
         const [result] = await pool.promise().execute(
             'UPDATE form_submissions SET store = ?, name = ?, email = ?, message = ? WHERE id = ?',
@@ -129,42 +126,3 @@ app.put('/api/submissions/:id', async (req, res) => {
         result.affectedRows
             ? res.json({ success: true })
             : res.status(404).json({ success: false, message: 'Submission not found' });
-    } catch (err) {
-        console.error("Update error:", err);
-        res.status(500).json({ success: false, message: 'Database error' });
-    }
-});
-
-// Delete submission
-app.delete('/api/submissions/:id', async (req, res) => {
-    const { id } = req.params;
-    if (!id || isNaN(id)) {
-        return res.status(400).json({ success: false, message: 'Invalid ID' });
-    }
-    try {
-        const [result] = await pool.promise().execute('DELETE FROM form_submissions WHERE id = ?', [id]);
-        result.affectedRows
-            ? res.json({ success: true })
-            : res.status(404).json({ success: false, message: 'Submission not found' });
-    } catch (err) {
-        console.error("Delete error:", err);
-        res.status(500).json({ success: false, message: 'Database error' });
-    }
-});
-
-// Get roles
-app.get('/api/roles', async (_req, res) => {
-    try {
-        console.log("🔍 Fetching roles...");
-        const [rows] = await pool.promise().execute('SELECT role_name FROM role ORDER BY role_name ASC');
-        res.json({ success: true, roles: rows });
-    } catch (err) {
-        console.error('❌ Error loading roles:', err.message, err.stack);
-        res.status(500).json({ success: false, message: 'Failed to load roles' });
-    }
-});
-
-// Start server
-app.listen(port, () => {
-    console.log(`🚀 Server is running on port ${port}`);
-});
