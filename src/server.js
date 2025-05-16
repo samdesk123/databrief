@@ -34,10 +34,13 @@ const dbConfig = {
 
 const pool = mysql.createPool(dbConfig);
 
-// Create table if not exists
+// Create tables and seed data if necessary
 (async () => {
     try {
-        await pool.promise().execute(`
+        const db = pool.promise();
+
+        // Create form_submissions table
+        await db.execute(`
             CREATE TABLE IF NOT EXISTS form_submissions (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 store VARCHAR(50) NOT NULL,
@@ -47,9 +50,33 @@ const pool = mysql.createPool(dbConfig);
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log("Table 'form_submissions' ensured.");
+        console.log("✅ Table 'form_submissions' ensured.");
+
+        // Create role table
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS role (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                role_name VARCHAR(50) NOT NULL UNIQUE
+            )
+        `);
+        console.log("✅ Table 'role' ensured.");
+
+        // Seed default roles if table is empty
+        const [existingRoles] = await db.query(`SELECT COUNT(*) as count FROM role`);
+        if (existingRoles[0].count === 0) {
+            await db.query(`
+                INSERT INTO role (role_name)
+                VALUES ('manage'), ('CA'), ('BA')
+            `);
+            console.log("✅ Default roles seeded.");
+        }
+
+        // Optional: List tables for debugging
+        const [tables] = await db.query('SHOW TABLES');
+        console.log("📋 Tables in database:", tables.map(t => Object.values(t)[0]));
+
     } catch (error) {
-        console.error("Error initializing database:", error);
+        console.error("❌ Error initializing database:", error);
     }
 })();
 
@@ -76,7 +103,7 @@ app.post('/api/submit-form', async (req, res) => {
     }
 });
 
-// Get all submissions test
+// Get all submissions
 app.get('/api/submissions', async (_req, res) => {
     try {
         const [rows] = await pool.promise().execute('SELECT * FROM form_submissions ORDER BY id ASC');
@@ -128,14 +155,16 @@ app.delete('/api/submissions/:id', async (req, res) => {
 // Get roles
 app.get('/api/roles', async (_req, res) => {
     try {
-        const [rows] = await pool.promise().execute('SELECT role_name FROM role ORDER BY role_name ASC;');
+        console.log("🔍 Fetching roles...");
+        const [rows] = await pool.promise().execute('SELECT role_name FROM role ORDER BY role_name ASC');
         res.json({ success: true, roles: rows });
     } catch (err) {
-        console.error('Error loading roles:', err);
+        console.error('❌ Error loading roles:', err.message, err.stack);
         res.status(500).json({ success: false, message: 'Failed to load roles' });
     }
 });
 
+// Start server
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`🚀 Server is running on port ${port}`);
 });
