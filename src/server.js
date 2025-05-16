@@ -126,3 +126,41 @@ app.put('/api/submissions/:id', async (req, res) => {
         result.affectedRows
             ? res.json({ success: true })
             : res.status(404).json({ success: false, message: 'Submission not found' });
+    } catch (err) {
+        console.error("Update error:", err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
+
+// API: Delete submission
+app.delete('/api/submissions/:id', async (req, res) => {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid ID' });
+    }
+    try {
+        const [result] = await pool.promise().execute('DELETE FROM form_submissions WHERE id = ?', [id]);
+        result.affectedRows
+            ? res.json({ success: true })
+            : res.status(404).json({ success: false, message: 'Submission not found' });
+    } catch (err) {
+        console.error("Delete error:", err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
+
+// API: Get roles
+app.get('/api/roles', async (_req, res) => {
+    try {
+        const [rows] = await pool.promise().execute('SELECT * FROM role ORDER BY role_name ASC');
+        res.json({ success: true, roles: rows });
+    } catch (err) {
+        console.error('Error loading roles:', err);
+        res.status(500).json({ success: false, message: 'Failed to load roles' });
+    }
+});
+
+// Start server
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
