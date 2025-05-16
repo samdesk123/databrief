@@ -128,7 +128,7 @@ app.delete('/api/submissions/:id', async (req, res) => {
 // Get roles
 app.get('/api/roles', async (_req, res) => {
     try {
-        const [rows] = await pool.promise().execute('SELECT role_name FROM role ORDER BY role_name ASC');
+        const [rows] = await pool.promise().execute('SELECT role_name FROM role ORDER BY role_name ASC;');
         res.json({ success: true, roles: rows });
     } catch (err) {
         console.error('Error loading roles:', err);
