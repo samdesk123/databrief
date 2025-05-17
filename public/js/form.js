@@ -20,7 +20,6 @@ async function loadRoles() {
 function populateRoles(roles) {
     const roleSelect = document.getElementById('role');
     roleSelect.innerHTML = '<option disabled selected>Choose a role</option>';
-
     roles.forEach(role => {
         const option = document.createElement('option');
         option.value = role.role_name;
@@ -29,10 +28,30 @@ function populateRoles(roles) {
     });
 }
 
+async function loadSelectedStore() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/selected-store`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch selected store. Status: ${response.status}`);
+        }
+        const store = await response.json();
+        if (store && store.name && store.logoUrl) {
+            document.getElementById('storeName').textContent = store.name;
+            document.getElementById('storeLogo').src = store.logoUrl;
+        } else {
+            throw new Error('Incomplete store data received');
+        }
+    } catch (error) {
+        console.error('Error loading selected store:', error);
+        document.getElementById('storeName').textContent = 'Error loading store';
+    }
+}
+
 function initializeForm() {
     loadRoles();
+    loadSelectedStore();
 
-    const form = document.getElementById('form');
+    const form = document.getElementById('myForm');
     if (!form) {
         console.error('Form element not found in DOM');
         return;
@@ -42,13 +61,14 @@ function initializeForm() {
         e.preventDefault();
 
         const formData = {
-            store: document.getElementById('store')?.value || '',
+            store: document.getElementById('storeName')?.textContent || '',
             name: document.getElementById('name')?.value || '',
             email: document.getElementById('email')?.value || '',
+            role: document.getElementById('role')?.value || '',
             message: document.getElementById('message')?.value || ''
         };
 
-        if (!formData.store || !formData.name || !formData.email || !formData.message) {
+        if (!formData.store || !formData.name || !formData.email || !formData.role || !formData.message) {
             alert('Please fill in all fields.');
             return;
         }
