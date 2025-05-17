@@ -20,6 +20,7 @@ async function loadRoles() {
 function populateRoles(roles) {
     const roleSelect = document.getElementById('role');
     roleSelect.innerHTML = '<option disabled selected>Choose a role</option>';
+
     roles.forEach(role => {
         const option = document.createElement('option');
         option.value = role.role_name;
@@ -30,17 +31,26 @@ function populateRoles(roles) {
 
 async function loadSelectedStore() {
     try {
+        // TEMP FIX: Hardcoded fallback for demo/test
+        const store = {
+            name: 'Demo Store',
+            logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Woolworths_Supermarket_logo.svg'
+        };
+
+        document.getElementById('storeName').textContent = store.name;
+        document.getElementById('storeLogo').src = store.logoUrl;
+
+        // UNCOMMENT below for real API call once working
+        /*
         const response = await fetch(`${API_BASE_URL}/api/selected-store`);
         if (!response.ok) {
             throw new Error(`Failed to fetch selected store. Status: ${response.status}`);
         }
+
         const store = await response.json();
-        if (store && store.name && store.logoUrl) {
-            document.getElementById('storeName').textContent = store.name;
-            document.getElementById('storeLogo').src = store.logoUrl;
-        } else {
-            throw new Error('Incomplete store data received');
-        }
+        document.getElementById('storeName').textContent = store.name || 'Unknown Store';
+        document.getElementById('storeLogo').src = store.logoUrl || '';
+        */
     } catch (error) {
         console.error('Error loading selected store:', error);
         document.getElementById('storeName').textContent = 'Error loading store';
