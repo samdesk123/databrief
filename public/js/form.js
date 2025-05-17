@@ -1,15 +1,26 @@
 const API_BASE_URL = 'https://databrief-141102685385.us-central1.run.app';
 
+function loadSelectedStore() {
+    const storeData = JSON.parse(localStorage.getItem('selectedStore'));
+
+    if (!storeData) {
+        document.getElementById('storeName').textContent = 'No store selected';
+        return;
+    }
+
+    document.getElementById('storeName').textContent = storeData.name;
+    document.getElementById('storeLogo').src = storeData.logo;
+
+    const hiddenStoreInput = document.getElementById('store');
+    if (hiddenStoreInput) hiddenStoreInput.value = storeData.id;
+}
+
 async function loadRoles() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/roles`);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch roles. Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch roles. Status: ${response.status}`);
         const data = await response.json();
-        if (!data.roles || !Array.isArray(data.roles)) {
-            throw new Error('Invalid roles format from server');
-        }
+        if (!data.roles || !Array.isArray(data.roles)) throw new Error('Invalid roles format from server');
         populateRoles(data.roles);
     } catch (error) {
         console.error('Error loading roles:', error);
@@ -29,56 +40,24 @@ function populateRoles(roles) {
     });
 }
 
-async function loadSelectedStore() {
-    try {
-        // TEMP FIX: Hardcoded fallback for demo/test
-        const store = {
-            name: 'Demo Store',
-            logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Woolworths_Supermarket_logo.svg'
-        };
-
-        document.getElementById('storeName').textContent = store.name;
-        document.getElementById('storeLogo').src = store.logoUrl;
-
-        // UNCOMMENT below for real API call once working
-        /*
-        const response = await fetch(`${API_BASE_URL}/api/selected-store`);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch selected store. Status: ${response.status}`);
-        }
-
-        const store = await response.json();
-        document.getElementById('storeName').textContent = store.name || 'Unknown Store';
-        document.getElementById('storeLogo').src = store.logoUrl || '';
-        */
-    } catch (error) {
-        console.error('Error loading selected store:', error);
-        document.getElementById('storeName').textContent = 'Error loading store';
-    }
-}
-
 function initializeForm() {
-    loadRoles();
     loadSelectedStore();
+    loadRoles();
 
     const form = document.getElementById('myForm');
-    if (!form) {
-        console.error('Form element not found in DOM');
-        return;
-    }
+    if (!form) return;
 
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const formData = {
-            store: document.getElementById('storeName')?.textContent || '',
+            store: document.getElementById('store')?.value || '',
             name: document.getElementById('name')?.value || '',
             email: document.getElementById('email')?.value || '',
-            role: document.getElementById('role')?.value || '',
             message: document.getElementById('message')?.value || ''
         };
 
-        if (!formData.store || !formData.name || !formData.email || !formData.role || !formData.message) {
+        if (!formData.store || !formData.name || !formData.email || !formData.message) {
             alert('Please fill in all fields.');
             return;
         }
